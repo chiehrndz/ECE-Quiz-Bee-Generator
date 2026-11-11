@@ -1,8 +1,15 @@
 // Runs on the server, so the API key stays hidden from the browser.
-const MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
+const MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
 const RETRYABLE = [429, 500, 503, 504];
 
-async function callModel(model, apiKey, prompt) {
+async function callModel(model, apiKey, prompt, useFastMode) {
+    const generationConfig = {
+        responseMimeType: "application/json",
+        maxOutputTokens: 1024,
+    };
+    if (useFastMode) {
+        generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    }
     return fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
@@ -13,7 +20,7 @@ async function callModel(model, apiKey, prompt) {
             },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json" },
+                generationConfig,
             }),
         }
     );
@@ -34,11 +41,14 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: "Server is missing GEMINI_API_KEY" });
     }
 
-    // Try each model up to 3 times, waiting longer between attempts.
     for (const model of MODELS) {
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
             try {
-                const response = await callModel(model, apiKey, prompt);
+                // First try with thinking off (fast). If the model rejects that setting, try without it.
+                let response = await callModel(model, apiKey, prompt, true);
+                if (response.status === 400) {
+                    response = await callModel(model, apiKey, prompt, false);
+                }
 
                 if (response.ok) {
                     const data = await response.json();
@@ -53,13 +63,13 @@ export default async function handler(req, res) {
                 console.error(`Gemini ${model} attempt ${attempt}:`, detail);
 
                 if (!RETRYABLE.includes(response.status)) {
-                    return res.status(502).json({ error: "AI request failed" });
+                    break; // Not a busy error, so skip retries and try the next model
                 }
             } catch (err) {
                 console.error(`Gemini ${model} attempt ${attempt} network error:`, err);
             }
 
-            await new Promise((r) => setTimeout(r, attempt * 1500));
+            await new Promise((r) => setTimeout(r, 800));
         }
     }
 
