@@ -1,16 +1,23 @@
-# React + Vite
+# ECE Quiz Bee Question Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+*Test Your Knowledge. Master Electronics Engineering.*
 
-Currently, two official plugins are available:
+React + Vite app with a Vercel serverless function (`api/generate.js`) that calls Gemini.
+Requires the `GEMINI_API_KEY` environment variable on Vercel.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Scripts
+- `npm run dev` – start Vite (use `vercel dev` to also run `/api/generate`)
+- `npm run build` – production build
+- `npm run lint` – oxlint
 
-## React Compiler
+## Structure
+- `src/App.jsx` – app shell, navigation, exam session logic
+- `src/data.js` – question generation (unchanged), storage keys, helpers
+- `src/pages.jsx` – dashboard, setup, topics, performance, mistakes, formulas, settings
+- `src/exam.jsx` – exam screen, solution panel, results, retry modal
+- `src/ui.jsx`, `src/icons.jsx` – shared components and inline Lucide-style icons
+- `src/mathParse.js` – plain-text math formatter and solution parser
+- `src/formulas.js` – formula reference data
+- `src/styles.css` – design tokens, light/dark themes, responsive styles
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+No new npm dependencies were added.
