@@ -61,7 +61,7 @@ export function buildPrompt(item, level, type, recent) {
 Category: ${item.catName}. Major subject: ${item.subject}. Subtopic: ${item.sub}.
 Stay strictly inside this subtopic. ${calc} ${olympiad}
 Avoid repeating these questions: ${recent.join(" | ") || "none"}.
-Rules: plain text only (no LaTeX), exactly 4 choices, exactly one correct, numeric choices include units, wrong choices reflect common mistakes. The solution must show formulas and steps, and verify the final answer.
+Rules: plain text only (no LaTeX), exactly 4 choices, exactly one correct, numeric choices include units, wrong choices reflect common mistakes. The solution must show formulas and steps, and verify the final answer. Format the solution with these labeled lines, in order: "Given:" (values with units), "Required:" (what to find), "Formula:" (the main formula used, in plain text on one line), "Solution:" (step-by-step working), "Final Answer:" (value with units). For conceptual questions, use "Solution:" for the explanation and omit the other labels.
 Return ONLY JSON: {"question":"","choices":["","","",""],"answer":0,"solution":"","type":"${kind}"} where answer is the index 0-3.`;
 }
 
