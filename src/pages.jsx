@@ -602,11 +602,26 @@ export function MistakesView({ mistakes, onRetry, onClear, onPractice }) {
 /* ====================================================================== */
 /* Formula reference                                                       */
 /* ====================================================================== */
-export function FormulasView() {
+export function FormulasView({ learned = [] }) {
   const [term, setTerm] = useState("");
   const [subject, setSubject] = useState("all");
   const t = term.trim().toLowerCase();
-  const groups = FORMULA_SUBJECTS.filter((s) => subject === "all" || s.id === subject)
+  const subjects = learned.length
+    ? [
+        ...FORMULA_SUBJECTS,
+        {
+          id: "learned",
+          name: "From your questions",
+          formulas: learned.map((f) => ({
+            name: f.topic,
+            expr: f.expr,
+            desc: `${f.category} · ${f.subject}. Taken from an AI-generated solution and not checked against a textbook.`,
+            vars: [],
+          })),
+        },
+      ]
+    : FORMULA_SUBJECTS;
+  const groups = subjects.filter((s) => subject === "all" || s.id === subject)
     .map((s) => ({
       ...s,
       formulas: s.formulas.filter((f) => !t || `${f.name} ${f.expr} ${f.desc} ${f.vars.map((v) => v.join(" ")).join(" ")}`.toLowerCase().includes(t)),
@@ -623,7 +638,7 @@ export function FormulasView() {
         </div>
       </div>
       <div className="chip-scroll" role="radiogroup" aria-label="Subject">
-        {[{ id: "all", name: "All subjects" }, ...FORMULA_SUBJECTS].map((s) => (
+        {[{ id: "all", name: "All subjects" }, ...subjects].map((s) => (
           <button key={s.id} role="radio" aria-checked={subject === s.id} className={`filter-chip ${subject === s.id ? "on" : ""}`} onClick={() => setSubject(s.id)}>
             {s.name}
           </button>
@@ -636,8 +651,8 @@ export function FormulasView() {
         <section key={s.id}>
           <div className="section-head"><h2>{s.name}</h2><span className="count-pill">{s.formulas.length}</span></div>
           <div className="formula-grid">
-            {s.formulas.map((f) => (
-              <article key={f.name} className="card formula-card">
+            {s.formulas.map((f, i) => (
+              <article key={`${f.name}-${i}`} className="card formula-card">
                 <h4>{f.name}</h4>
                 <div className="formula-box"><MathText text={f.expr} /></div>
                 <p className="muted small">{f.desc}</p>

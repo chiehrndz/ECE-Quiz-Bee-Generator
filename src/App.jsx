@@ -5,6 +5,7 @@ import {
 } from "./data.js";
 import { Icon, Logo } from "./icons.jsx";
 import { ConfirmDialog, Toasts } from "./ui.jsx";
+import { FORMULA_LOG_KEY, formulasFromQuestion, mergeFormulas } from "./formulaLog.js";
 import { ExamView, ResultsView, RetryModal } from "./exam.jsx";
 import {
   Dashboard, FormulasView, MistakesView, PerformanceView, SettingsView, SetupView, TopicsView,
@@ -34,6 +35,7 @@ export default function App() {
   const [progress, setProgress] = useState(() => load(PROGRESS_KEY, {}));
   const [stats, setStats] = useState(() => ({ ...EMPTY_STATS, ...load(STATS_KEY, {}) }));
   const [mistakes, setMistakes] = useState(() => load(MISTAKES_KEY, []));
+  const [formulaLog, setFormulaLog] = useState(() => load(FORMULA_LOG_KEY, []));
   const [settings, setSettings] = useState(() => ({ theme: "system", collapsed: false, secPerQ: 90, ...load(SETTINGS_KEY, {}) }));
   const [custom, setCustom] = useState("");
   const [filter, setFilter] = useState("");
@@ -62,6 +64,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem(SELECTED_KEY, JSON.stringify(selected)); }, [selected]);
   useEffect(() => { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }, [stats]);
   useEffect(() => { localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes)); }, [mistakes]);
+  useEffect(() => { localStorage.setItem(FORMULA_LOG_KEY, JSON.stringify(formulaLog)); }, [formulaLog]);
   useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
 
   /* ---------- theme ---------- */
@@ -113,6 +116,7 @@ export default function App() {
       .then((nq) => {
         if (examId.current !== id) return;
         recent.current.push(nq.question.slice(0, 80));
+        setFormulaLog((log) => mergeFormulas(log, formulasFromQuestion(nq)));
         setEx((e) => (e && e.id === id ? { ...e, qs: setAt(e.qs, i, nq), err: { ...e.err, [i]: false } } : e));
       })
       .catch(() => {
@@ -488,7 +492,7 @@ export default function App() {
             <MistakesView mistakes={mistakes} onRetry={setRetry} onClear={confirmClearMistakes} onPractice={() => setView("practice")} />
           )}
           {view === "performance" && <PerformanceView progress={progress} stats={stats} onPractice={() => setView("practice")} />}
-          {view === "formulas" && <FormulasView />}
+          {view === "formulas" && <FormulasView learned={formulaLog} />}
           {view === "settings" && (
             <SettingsView settings={settings} setSettings={setSettings} onResetAll={confirmReset} onClearMistakes={confirmClearMistakes} />
           )}
